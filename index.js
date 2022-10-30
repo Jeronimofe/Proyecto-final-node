@@ -32,6 +32,8 @@ server.use("/characters", characterRouter);
 server.use("/villages", villageRouter);
 server.use("/users", userRouter);
 
+server.use("/", (req,res) => {
+  return res.status(200).json("Servidor OK")});
 
 
 
@@ -48,8 +50,7 @@ server.use("/users", userRouter);
       return res.status(err.status ||  500).json(err.message || "Unexpected error");
     });
 
-    server.use("/", (req,res) => {
-      return res.status(200).json("Servidor OK")});
+    
 
 
     
