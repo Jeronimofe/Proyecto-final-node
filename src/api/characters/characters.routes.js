@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const {upload, deleteFile} = require("../../utils/middleware/file");
 const Character = require("./character.model");
 
 router.get("/", (req, res, next) => {
@@ -49,9 +49,12 @@ router.get("/village/:village", (req, res, next) => {
       });
   });
 
-  router.post("/create", async (req, res, next) => {
+  router.post("/create",upload.single("img"), async (req, res, next) => {
     try {
       const character = req.body;
+      if (req.file) {
+        character.img = req.file.path;
+      };
       const newCharacter = new Character(character);
       const createdCharacter = await newCharacter.save();
       return res.status(201).json(createdCharacter);
@@ -70,12 +73,20 @@ router.get("/village/:village", (req, res, next) => {
     }
   });
 
-  router.put('/edit/:id', async (req, res, next) => {
+  router.put('/edit/:id',upload.single("img"), async (req, res, next) => {
     try {
         const { id } = req.params;
-        const characterModify = new Character(req.body);
+        const character = req.body;
+        const characterOld = await Character.findById(id);
+    if (req.file) {
+      if (characterOld.img) {
+        deleteFile(characterOld.img);
+      }
+      character.img = req.file.path;
+    }
+        const characterModify = new Character(character);
         characterModify._id = id;
-        const characterUpdate = await Character.findByIdAndUpdate(id , characterModify);
+        const characterUpdate = await Character.findByIdAndUpdate(id , characterModify, {returnOriginal:false});
         return res.status(200).json(characterUpdate)
     } catch (error) {
         return next (error);
@@ -87,10 +98,4 @@ router.get("/village/:village", (req, res, next) => {
 module.exports = router;
 
 
-// Cat.findOneAndUpdate({age: 17}, {$set:{name:"Naomi"}}, {new: true}, (err, doc) => {
-//     if (err) {
-//         console.log("Something wrong when updating data!");
-//     }
 
-//     console.log(doc);
-// });
